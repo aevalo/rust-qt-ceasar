@@ -47,3 +47,10 @@ Run the application
 ```sh
 cargo --quiet r
 ```
+
+### Extra tools
+
+Install just task runner
+```sh
+cargo install just
+```
