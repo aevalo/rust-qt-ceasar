@@ -20,6 +20,31 @@ jobs:
     name: Code quality
     runs-on: ubuntu-22.04
 
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Install rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Install latest just release
+        uses: taiki-e/install-action@just
+
+      - name: Ensure `fmt` has been run
+        run:  just fmt-check
+
+      - name: Install Qt
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends --allow-unauthenticated \
+            qt6-base-dev                                                          \
+            qt6-declarative-dev
+
+      - name: Run clippy
+        run: just lint
+
   build:
     name: Build for GNU/Linux
     runs-on: ubuntu-22.04
@@ -30,10 +55,13 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install rust toolchain (v${{ env.MIN_SUPPORTED_RUST_VERSION }})
+        uses: dtolnay/rust-toolchain@master
         with:
-          target: x86_64-unknown-linux-gnu
+          toolchain: ${{ env.MIN_SUPPORTED_RUST_VERSION }}
+
+      - name: Install latest just release
+        uses: taiki-e/install-action@just
 
       - name: Install Qt
         if: matrix.os == 'ubuntu-22.04'
@@ -45,3 +73,6 @@ jobs:
 
       - name: Build
         run: cargo build --release --locked
+
+      - name: Run tests
+        run: just test
